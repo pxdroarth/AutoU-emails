@@ -31,7 +31,10 @@ btn.addEventListener("click", async () => {
   const f = file.files[0];
   const t = (txt.value || "").trim();
 
-  if (!f && !t) { alert("Cole um texto ou selecione um arquivo .txt/.pdf/.eml"); return; }
+  if (!f && !t) {
+    alert("Cole um texto ou selecione um arquivo .txt/.pdf/.eml");
+    return;
+  }
 
   // limpa UI anterior
   outCat.textContent = "-";
@@ -43,24 +46,16 @@ btn.addEventListener("click", async () => {
   btn.disabled = true;
   btn.textContent = "Processando...";
   try {
-    let res;
-    if (f) {
-      // arquivo -> multipart/form-data
-      const fd = new FormData();
-      fd.append("arquivo", f);
-      res = await fetch(`${API_BASE}/classify`, {
-        method: "POST",
-        headers: { "Accept": "application/json" },
-        body: fd
-      });
-    } else {
-      // só texto -> JSON
-      res = await fetch(`${API_BASE}/classify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({ texto: t })
-      });
-    }
+    // Envia SEMPRE como FormData (texto e/ou arquivo)
+    const fd = new FormData();
+    if (t) fd.append("texto", t);
+    if (f) fd.append("arquivo", f);
+
+    const res = await fetch(`${API_BASE}/classify`, {
+      method: "POST",
+      headers: { "Accept": "application/json" }, // NÃO defina Content-Type manualmente
+      body: fd
+    });
 
     if (!res.ok) {
       let msg = `HTTP ${res.status}`;
@@ -70,7 +65,8 @@ btn.addEventListener("click", async () => {
 
     const text = await res.text();
     if (!text) throw new Error("Resposta vazia da API.");
-    let data; try { data = JSON.parse(text); } catch { throw new Error("Resposta não é JSON válido."); }
+    let data;
+    try { data = JSON.parse(text); } catch { throw new Error("Resposta não é JSON válido."); }
 
     outCat.textContent = data.categoria ?? "-";
     outConf.textContent = (typeof data.confianca === "number") ? `${(data.confianca * 100).toFixed(1)}%` : "-";

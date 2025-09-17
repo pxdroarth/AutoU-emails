@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 from pathlib import Path
@@ -14,7 +14,7 @@ from .services.classifier import classificar_e_sugerir
 from .services.pdf_reader import extract_text_from_pdf  # leve, PyPDF2
 
 # Leitor de EML é opcional
-try:    
+try:
     from .services.eml_reader import extract_text_from_eml
     HAS_EML = True
 except Exception:
@@ -62,9 +62,25 @@ def config():
 
 @app.post("/classify", response_model=RespostaClassificacao)
 async def classify(
+    request: Request,
     arquivo: Optional[UploadFile] = File(None),
     texto: Optional[str] = Form(None),
 ):
+    """
+    Aceita:
+      - multipart/form-data: campos 'texto' e/ou 'arquivo'
+      - application/json:    body {"texto": "..."}
+    """
+    # Se não veio via form/multipart, tente JSON { "texto": "..." }
+    if texto is None and arquivo is None:
+        try:
+            data = await request.json()
+            if isinstance(data, dict):
+                texto = (data.get("texto") or "").strip()
+        except Exception:
+            # não é JSON; segue fluxo normal
+            pass
+
     # 1) Extrair conteúdo (prioriza arquivo, se enviado)
     conteudo = (texto or "").strip()
 
