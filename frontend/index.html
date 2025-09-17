@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>AutoU — Classificador de Emails</title>
+  <link rel="stylesheet" href="./styles.css"/>
+</head>
+<body>
+  <main class="container">
+    <h1>
+      AutoU — Classificador & Auto-Responder
+      <span id="originTitle" class="muted"></span>
+    </h1>
+
+    <section class="card">
+      <label for="emailText">Colar texto do email</label>
+      <textarea id="emailText" rows="8" placeholder="Cole aqui o conteúdo do email..."></textarea>
+
+      <div class="row">
+        <div>
+          <label for="emailFile">Ou enviar arquivo (.txt, .pdf, .eml)</label>
+          <input id="emailFile" type="file" accept=".txt,.pdf,.eml"/>
+        </div>
+        <div class="actions">
+          <button id="btnProcessar">Processar</button>
+        </div>
+      </div>
+      <small class="muted">Processamento com fallback inteligente (HF → modelo → heurística).</small>
+    </section>
+
+    <section id="result" class="card hidden">
+      <h2>Resultado</h2>
+      <p>
+        <strong>Categoria:</strong>
+        <span id="outCategory"></span>
+        <span id="originBadge" class="badge">?</span>
+      </p>
+      <p><strong>Confiança:</strong> <span id="outConfidence"></span></p>
+      <label for="outReply">Resposta sugerida</label>
+      <textarea id="outReply" rows="6" readonly></textarea>
+      <button id="btnCopiar">Copiar resposta</button>
+    </section>
+
+    <footer class="muted center">Feito por Pedro Arthur — Case Prático AutoU</footer>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
