@@ -45,6 +45,10 @@
     <footer class="muted center">Feito por Pedro Arthur — Case Prático AutoU</footer>
   </main>
 
-  <script src="./app.js"></script>
+  <!-- Render injeta esta variável a partir da env API_BASE -->
+  <script>window.API_BASE = "{{ API_BASE }}";</script>
+  <!-- Carrega config (resolve API_BASE) e depois o app -->
+  <script src="./config.js?v=2"></script>
+  <script src="./app.js?v=2"></script>
 </body>
 </html>

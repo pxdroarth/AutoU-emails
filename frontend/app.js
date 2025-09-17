@@ -1,8 +1,9 @@
-const API_BASE =
-  (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-    ? "http://127.0.0.1:8000"
-    : "http://127.0.0.1:8000"; // local-first
+// frontend/app.js
 
+// Lê a base da API da config injetada
+const API_BASE = window.APP_CONFIG?.API_BASE;
+
+// Helpers e refs
 const $ = (q) => document.querySelector(q);
 const txt = $("#emailText");
 const file = $("#emailFile");
@@ -18,9 +19,9 @@ const originTitle = $("#originTitle");
 // mapeia origem -> [label, classes CSS, texto do título]
 function setBadge(origin) {
   const map = {
-    hf:        ["HF",         "badge b-hf", "via Hugging Face"],
-    modelo:    ["Local",      "badge b-ml", "via Modelo Local"],
-    heuristica:["Heurística", "badge b-h",  "via Heurística"],
+    hf:         ["HF",         "badge b-hf", "via Hugging Face"],
+    modelo:     ["Local",      "badge b-ml", "via Modelo Local"],
+    heuristica: ["Heurística", "badge b-h",  "via Heurística"],
   };
   const [label, cls, titleText] = map[origin] || ["?", "badge", ""];
   if (originBadge) {
@@ -52,21 +53,22 @@ btn.addEventListener("click", async () => {
   try {
     const res = await fetch(`${API_BASE}/classify`, { method: "POST", body: fd });
     if (!res.ok) {
-      const err = await res.text().catch(() => "");
-      throw new Error(err || `HTTP ${res.status}`);
+      let msg = `HTTP ${res.status}`;
+      try { msg = await res.text(); } catch {}
+      throw new Error(msg || `HTTP ${res.status}`);
     }
     const data = await res.json();
 
-    outCat.textContent = data.categoria || "-";
-    outConf.textContent = data.confianca != null
+    outCat.textContent = data.categoria ?? "-";
+    outConf.textContent = (typeof data.confianca === "number")
       ? `${(data.confianca * 100).toFixed(1)}%`
       : "-";
-    outReply.value = data.resposta_sugerida || "";
+    outReply.value = data.resposta_sugerida ?? "";
 
     setBadge(data.origem);
     box.classList.remove("hidden");
   } catch (e) {
-    alert("Erro: " + (e.message || e));
+    alert("Erro ao classificar: " + (e?.message || e));
   } finally {
     btn.disabled = false;
     btn.textContent = "Processar";
