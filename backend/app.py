@@ -11,11 +11,11 @@ load_dotenv(ENV_PATH, override=False)
 
 from .models.schemas import RespostaClassificacao
 from .services.classifier import classificar_e_sugerir
-from services.pdf_reader import extract_text_from_pdf  # leve, PyPDF2
+from .services.pdf_reader import extract_text_from_pdf  # leve, PyPDF2
 
 # Leitor de EML é opcional
-try:
-    from services.eml_reader import extract_text_from_eml
+try:    
+    from .services.eml_reader import extract_text_from_eml
     HAS_EML = True
 except Exception:
     HAS_EML = False

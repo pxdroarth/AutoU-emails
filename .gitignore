@@ -44,3 +44,4 @@ node_modules/
 
 # garantir que o modelo treinado vá para o repo
 !backend/data/model.pkl
+    
