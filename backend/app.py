@@ -9,8 +9,8 @@ from dotenv import load_dotenv, find_dotenv
 ENV_PATH = find_dotenv(usecwd=True) or str((Path(__file__).parent / ".env").resolve())
 load_dotenv(ENV_PATH, override=False)
 
-from models.schemas import RespostaClassificacao
-from services.classifier import classificar_e_sugerir
+from .models.schemas import RespostaClassificacao
+from .services.classifier import classificar_e_sugerir
 from services.pdf_reader import extract_text_from_pdf  # leve, PyPDF2
 
 # Leitor de EML é opcional

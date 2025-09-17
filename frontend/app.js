@@ -1,8 +1,6 @@
 // Lê a base da API da config injetada
 const API_BASE = window.APP_CONFIG?.API_BASE;
-if (!API_BASE) {
-  alert("Config inválida: API_BASE não definida.");
-}
+if (!API_BASE) alert("Config inválida: API_BASE não definida.");
 
 // Helpers e refs
 const $ = (q) => document.querySelector(q);
@@ -17,44 +15,46 @@ const btnCopy = $("#btnCopiar");
 const originBadge = $("#originBadge");
 const originTitle = $("#originTitle");
 
-// mapeia origem -> [label, classes CSS, texto do título]
+// badge
 function setBadge(origin) {
   const map = {
-    hf:         ["HF",         "badge b-hf", "via Hugging Face"],
-    modelo:     ["Local",      "badge b-ml", "via Modelo Local"],
-    heuristica: ["Heurística", "badge b-h",  "via Heurística"],
+    hf: ["HF", "badge b-hf", "via Hugging Face"],
+    modelo: ["Local", "badge b-ml", "via Modelo Local"],
+    heuristica: ["Heurística", "badge b-h", "via Heurística"],
   };
   const [label, cls, titleText] = map[origin] || ["?", "badge", ""];
-  if (originBadge) {
-    originBadge.textContent = label;
-    originBadge.className = cls;
-  }
-  if (originTitle) {
-    originTitle.textContent = titleText ? ` (${titleText})` : "";
-  }
+  if (originBadge) { originBadge.textContent = label; originBadge.className = cls; }
+  if (originTitle) { originTitle.textContent = titleText ? ` (${titleText})` : ""; }
 }
 
 btn.addEventListener("click", async () => {
   const f = file.files[0];
   const t = (txt.value || "").trim();
 
-  if (!f && !t) {
-    alert("Cole um texto ou selecione um arquivo .txt/.pdf/.eml");
-    return;
-  }
+  if (!f && !t) { alert("Cole um texto ou selecione um arquivo .txt/.pdf/.eml"); return; }
+
+  // limpa UI anterior
+  outCat.textContent = "-";
+  outConf.textContent = "-";
+  outReply.value = "";
+  setBadge(null);
+  box.classList.add("hidden");
 
   btn.disabled = true;
   btn.textContent = "Processando...";
   try {
     let res;
-
     if (f) {
       // arquivo -> multipart/form-data
       const fd = new FormData();
       fd.append("arquivo", f);
-      res = await fetch(`${API_BASE}/classify`, { method: "POST", body: fd });
+      res = await fetch(`${API_BASE}/classify`, {
+        method: "POST",
+        headers: { "Accept": "application/json" },
+        body: fd
+      });
     } else {
-      // só texto -> JSON (backend típico com Pydantic)
+      // só texto -> JSON
       res = await fetch(`${API_BASE}/classify`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -68,18 +68,13 @@ btn.addEventListener("click", async () => {
       throw new Error(msg || `HTTP ${res.status}`);
     }
 
-    // pode vir vazio se backend não retornou JSON — tenta proteger
     const text = await res.text();
     if (!text) throw new Error("Resposta vazia da API.");
-    let data;
-    try { data = JSON.parse(text); } catch { throw new Error("Resposta não é JSON válido."); }
+    let data; try { data = JSON.parse(text); } catch { throw new Error("Resposta não é JSON válido."); }
 
     outCat.textContent = data.categoria ?? "-";
-    outConf.textContent = (typeof data.confianca === "number")
-      ? `${(data.confianca * 100).toFixed(1)}%`
-      : "-";
+    outConf.textContent = (typeof data.confianca === "number") ? `${(data.confianca * 100).toFixed(1)}%` : "-";
     outReply.value = data.resposta_sugerida ?? "";
-
     setBadge(data.origem);
     box.classList.remove("hidden");
   } catch (e) {
