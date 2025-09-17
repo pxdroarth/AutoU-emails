@@ -26,8 +26,9 @@ Suporte a múltiplos formatos: texto puro, PDF e arquivos .eml.
 Interface simples para colar texto ou enviar arquivos.
 
 Respostas automáticas corporativas adaptadas à categoria.
-```bash
+
 🏗️ Arquitetura
+```bash
 AutoU-emails/
 ├── backend/
 │   ├── app.py              # FastAPI principal (rotas /health, /classify)
@@ -64,6 +65,61 @@ pip install -r requirements.txt
 ```
 
 Inicie o backend:
+```bash
+uvicorn app:app --reload
+```
+📚 Treinamento do modelo local (TF-IDF + Regressão Logística)
+
+O projeto inclui um script para (re)treinar o modelo local a partir de um CSV rotulado.
+
+Formato esperado do CSV
+
+Arquivo: backend/data/train.csv (padrão).
+
+Colunas (header):
+
+texto → conteúdo do email (string)
+
+categoria → rótulo Produtivo ou Improdutivo
+
+Exemplo (train.csv):
+```csv
+texto,categoria
+"Favor verificar o status do protocolo 12345","Produtivo"
+"Agradeço o ótimo suporte prestado","Improdutivo"
+"Em anexo segue a fatura do mês","Produtivo"
+"Feliz Natal para toda a equipe!","Improdutivo"
+```
+Dica: mantenha a base equilibrada entre as classes para melhorar a qualidade.
+
+Rodando o treinamento
+
+No Windows (PowerShell):
+
+```powershell
+cd backend
+.venv\Scripts\activate
+python train_classifier.py
+```
+
+No Linux/Mac:
+```bash
+cd backend
+source .venv/bin/activate
+python train_classifier.py
+```
+Saída esperada
+
+O modelo treinado será salvo em:
+backend/data/model.pkl
+
+O backend já lê esse caminho automaticamente (não precisa configurar nada).
+
+Atualizei o modelo, preciso reiniciar algo?
+
+Se o uvicorn estiver rodando, reinicie o backend para ele recarregar o novo model.pkl:
+
+# na pasta backend
 ```bash
 uvicorn app:app --reload
 ```
