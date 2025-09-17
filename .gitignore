@@ -1,4 +1,4 @@
-# Python
+# Python cache & compiled
 __pycache__/
 *.pyc
 *.pyo
@@ -6,29 +6,41 @@ __pycache__/
 *.egg-info/
 .eggs/
 
-# Virtual env
+# Virtual environments
 .venv/
 venv/
 env/
 
-# VSCode / IDE
+# IDE / Editor configs
 .vscode/
 .idea/
 *.code-workspace
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
-# Data & artifacts
+# Logs
 *.log
 
-# Environment
+# Environment configs
 .env
 .env.*
 
-# Node/Front (se um dia usar)
+# Node / Frontend (se usar)
 node_modules/
 
 # Cache
 .cache/
+
+# -----------------------------
+# EXCEÇÕES (precisamos manter)
+# -----------------------------
+
+# garantir que pacotes Python sejam enviados
+!backend/__init__.py
+!backend/models/__init__.py
+!backend/services/__init__.py
+
+# garantir que o modelo treinado vá para o repo
+!backend/data/model.pkl
