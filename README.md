@@ -1,209 +1,104 @@
-# AutoU — Classificador & Auto‑Responder de Emails 🚀
+## AutoU — Classificador & Auto‑Responder de Emails 🚀
 
 [![Python](https://img.shields.io/badge/python-3.x-blue)](https://www.python.org/) [![FastAPI](https://img.shields.io/badge/FastAPI‑backend-green)](https://fastapi.tiangolo.com/) [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 
 ---
-📋 Descrição
 
-AutoU é um sistema backend em Python + FastAPI que automatiza a classificação de emails e sugere respostas corporativas automáticas.
+App web (FastAPI + HTML/JS) que:
+- Classifica emails em **Produtivo** ou **Improdutivo**
+- Gera **resposta sugerida** conforme a categoria
+- Aceita **texto** ou **arquivos** (.txt, .pdf, .eml)
 
-O sistema identifica se um email é:
+## 🚀 Demo
+- **Frontend (estático)**: https://autou-emails.onrender.com
+- **Backend (FastAPI)**: https://autou-backend-ggdb.onrender.com
+  - Health: `/health`
+  - Docs (Swagger): `/docs`
 
-Produtivo — requer ação (suporte, protocolo, fatura, problema).
-
-Improdutivo — mensagens sem necessidade de ação (felicitações, agradecimentos).
-
-Dependendo da categoria, o sistema sugere uma resposta pronta e formal, agilizando o atendimento.
-
-🧠 Diferenciais
-
-Local-First: roda 100% offline usando modelo treinado TF-IDF + Regressão Logística.
-
-Heurísticas inteligentes: palavras-chave e boosts aumentam precisão em casos ambíguos.
-
-Suporte a múltiplos formatos: texto puro, PDF e arquivos .eml.
-
-Interface simples para colar texto ou enviar arquivos.
-
-Respostas automáticas corporativas adaptadas à categoria.
-
-🏗️ Arquitetura
-```bash
+## 🧩 Arquitetura
+```tree
 AutoU-emails/
-├── backend/
-│   ├── app.py              # FastAPI principal (rotas /health, /classify)
-│   ├── models/
-│   │   └── schemas.py      # Schemas Pydantic
-│   ├── services/
-│   │   ├── classifier.py   # Orquestrador (Modelo Local + Heurística)
-│   │   ├── responders.py   # Respostas padrão
-│   │   ├── pdf_reader.py   # Leitor PDF (PyPDF2)
-│   │   └── eml_reader.py   # Leitor EML (opcional)
-│   └── data/
-│       └── model.pkl       # Modelo local treinado
-├── requirements.txt
-└── README.md
+├── backend/ # FastAPI
+│ ├── app.py # Rotas /health /config /classify
+│ ├── models/schemas.py # RespostaClassificacao (Pydantic)
+│ └── services/ # classifier.py, pdf_reader.py, eml_reader.py (opcional)
+└── frontend/ # HTML/CSS/JS estático
+├── index.html
+├── styles.css
+├── app.js
+└── config.js # window.APP_CONFIG.API_BASE
 ```
-⚙️ Instalação
+shell
 
-Clone o repositório:
+
+## 🏃 Rodando local
 ```bash
-git clone https://github.com/seu-usuario/AutoU-emails.git
-cd AutoU-emails/backend
+# raiz do repo
+uvicorn backend.app:app --reload
+# abre http://127.0.0.1:8000/docs
 ```
 
-Crie ambiente virtual:
-```powershell
-python -m venv .venv
-.venv\Scripts\activate   # Windows
-source .venv/bin/activate  # Linux/Mac
+# em outra aba, sirva o frontend
+cd frontend
+python -m http.server 8080
+# abre http://127.0.0.1:8080
+Em frontend/config.js:
+
+```js
+window.APP_CONFIG = { API_BASE: "http://127.0.0.1:8000" };
 ```
+☁️ Deploy no Render
+Backend
 
-Instale dependências:
-```bash
-pip install -r requirements.txt
-```
+Root Directory: .
 
-Inicie o backend:
-```bash
-uvicorn app:app --reload
-```
-📚 Treinamento do modelo local (TF-IDF + Regressão Logística)
+Build Command: pip install -r backend/requirements.txt
 
-O projeto inclui um script para (re)treinar o modelo local a partir de um CSV rotulado.
+Start Command: uvicorn backend.app:app --host 0.0.0.0 --port $PORT
 
-Formato esperado do CSV
+Frontend
 
-Arquivo: backend/data/train.csv (padrão).
+Static Site apontando para /frontend (public root)
 
-Colunas (header):
+Em frontend/config.js usar: API_BASE: "https://autou-backend-ggdb.onrender.com"
 
-texto → conteúdo do email (string)
+🔎 API
+GET /health → { "status": "ok" }
 
-categoria → rótulo Produtivo ou Improdutivo
+POST /classify
 
-Exemplo (train.csv):
-```csv
-texto,categoria
-"Favor verificar o status do protocolo 12345","Produtivo"
-"Agradeço o ótimo suporte prestado","Improdutivo"
-"Em anexo segue a fatura do mês","Produtivo"
-"Feliz Natal para toda a equipe!","Improdutivo"
-```
-Dica: mantenha a base equilibrada entre as classes para melhorar a qualidade.
+JSON: { "texto": "..." }
 
-Rodando o treinamento
+multipart/form-data: texto e/ou arquivo
 
-No Windows (PowerShell):
+Retorno:
 
-```powershell
-cd backend
-.venv\Scripts\activate
-python train_classifier.py
-```
-
-No Linux/Mac:
-```bash
-cd backend
-source .venv/bin/activate
-python train_classifier.py
-```
-Saída esperada
-
-O modelo treinado será salvo em:
-backend/data/model.pkl
-
-O backend já lê esse caminho automaticamente (não precisa configurar nada).
-
-Atualizei o modelo, preciso reiniciar algo?
-
-Se o uvicorn estiver rodando, reinicie o backend para ele recarregar o novo model.pkl:
-
-# na pasta backend
-```bash
-uvicorn app:app --reload
-```
-
-▶️ Uso
-
-Acesse http://127.0.0.1:8000 para API.
-
-Endpoint principal:
 ```json
-POST /classify → recebe texto ou arquivo (.txt/.pdf/.eml) e retorna categoria, confiança, resposta sugerida e origem.
+{
+  "categoria": "Produtivo",
+  "confianca": 0.96,
+  "resposta_sugerida": "Olá! Recebemos...",
+  "origem": "modelo"
+}
 ```
-Interface web: basta abrir o arquivo HTML no navegador (index.html).
+🧠 IA
+Pipeline com modelo local + heurística (fallback).
 
-Frontend (Interface web)
+Leitura de .pdf via PyPDF2; .eml opcional.
 
-Abra uma nova aba do terminal e vá até a pasta frontend/.
+Código desacoplado em services/ para trocar provedores (HF/OpenAI) depois.
 
-Sirva os arquivos estáticos com um servidor simples, por exemplo:
+✅ Testes rápidos
 ```bash
-cd ../frontend
-python -m http.server 5500
-```
-Por padrao o uso local sera
-```url
-http://127.0.0.1:5500/
-```
-para rodar manualmente
-
-✅ Funcionalidades
-
-
-Classificação automática Produtivo vs. Improdutivo
-
-Resposta sugerida automaticamente
-
-Upload de arquivo ou entrada manual de texto
-
-Heurística robusta + modelo local híbrido
-
-Fallback seguro sempre retorna algo
-
-
-🧪 Testes
-
-```python
-Exemplo com pytest:
-
-from fastapi.testclient import TestClient
-from app import app
-
-def test_health():
-    client = TestClient(app)
-    r = client.get("/health")
-    assert r.status_code == 200
-    assert r.json() == {"status": "ok"}
-
-def test_classify():
-    client = TestClient(app)
-    payload = {"texto": "Favor verificar protocolo 1234, não recebi resposta"}
-    r = client.post("/classify", data=payload)
-    data = r.json()
-    assert r.status_code == 200
-    assert data["categoria"] == "Produtivo"
-```
-
-📆 Roadmap
-
- Ampliar base de palavras-chave e treinar modelo com novos domínios.
-
- Persistir histórico de classificações em banco de dados.
-
- Criar frontend dedicado (React ou Vite).
-
- Dashboard com métricas (qtd. de emails, % produtivos, etc.).
-
-📜 Licença
-
-Projeto sob licença MIT — veja LICENSE
-.
+curl https://autou-backend-ggdb.onrender.com/health
+curl -X POST https://autou-backend-ggdb.onrender.com/classify \
+  -H "Content-Type: application/json" -d '{"texto":"Preciso do status do protocolo 123."}'
+  ```
 
 👤 Autor
+Pedro Arthur 
 
-Pedro Arthur Maia Damasceno
+Pedro Arthur Maia Damasceno (pxdroarth)
 Desenvolvedor Full Stack em formação.
 
 ```markdown
