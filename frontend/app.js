@@ -1,7 +1,8 @@
-// frontend/app.js
-
 // Lê a base da API da config injetada
 const API_BASE = window.APP_CONFIG?.API_BASE;
+if (!API_BASE) {
+  alert("Config inválida: API_BASE não definida.");
+}
 
 // Helpers e refs
 const $ = (q) => document.querySelector(q);
@@ -34,16 +35,10 @@ function setBadge(origin) {
 }
 
 btn.addEventListener("click", async () => {
-  // monta o FormData enviando OU arquivo OU texto
-  const fd = new FormData();
   const f = file.files[0];
   const t = (txt.value || "").trim();
 
-  if (f) {
-    fd.append("arquivo", f);
-  } else if (t) {
-    fd.append("texto", t);
-  } else {
+  if (!f && !t) {
     alert("Cole um texto ou selecione um arquivo .txt/.pdf/.eml");
     return;
   }
@@ -51,13 +46,33 @@ btn.addEventListener("click", async () => {
   btn.disabled = true;
   btn.textContent = "Processando...";
   try {
-    const res = await fetch(`${API_BASE}/classify`, { method: "POST", body: fd });
+    let res;
+
+    if (f) {
+      // arquivo -> multipart/form-data
+      const fd = new FormData();
+      fd.append("arquivo", f);
+      res = await fetch(`${API_BASE}/classify`, { method: "POST", body: fd });
+    } else {
+      // só texto -> JSON (backend típico com Pydantic)
+      res = await fetch(`${API_BASE}/classify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ texto: t })
+      });
+    }
+
     if (!res.ok) {
       let msg = `HTTP ${res.status}`;
       try { msg = await res.text(); } catch {}
       throw new Error(msg || `HTTP ${res.status}`);
     }
-    const data = await res.json();
+
+    // pode vir vazio se backend não retornou JSON — tenta proteger
+    const text = await res.text();
+    if (!text) throw new Error("Resposta vazia da API.");
+    let data;
+    try { data = JSON.parse(text); } catch { throw new Error("Resposta não é JSON válido."); }
 
     outCat.textContent = data.categoria ?? "-";
     outConf.textContent = (typeof data.confianca === "number")
